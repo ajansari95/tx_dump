@@ -1,4 +1,5 @@
 use crate::models::transaction::{ResponseData};
+use crate::models::pagination::{Pagination};
 use std::fmt;
 
 pub const COSMOS_API_ENDPOINT: &str = "https://lcd.cosmoshub-4.quicksilver.zone:443";
@@ -31,15 +32,34 @@ impl fmt::Display for FetchError {
 ///
 /// * `Result<ResponseData,FetchError>` - On success, returns the fetched transaction data.
 ///   On failure, returns a custom error indicating the type of the issue.
-pub fn fetch_transactions_for_height(height: u64) -> Result<ResponseData,FetchError>{
-    let url = format!("{}/cosmos/tx/v1beta1/txs?events=tx.height={}", COSMOS_API_ENDPOINT, height);
+pub fn fetch_transactions_for_height(height: u64) -> Result<Vec<ResponseData>, FetchError> {
+    let mut all_data = Vec::new();
+    let mut next_key: Option<String> = None;
 
-    println!("{}", url);
+    loop {
+        let url = if let Some(ref nk) = next_key {
+            format!("{}/cosmos/tx/v1beta1/txs?events=tx.height={}&pagination_key={}", COSMOS_API_ENDPOINT, height, nk)
+        } else {
+            format!("{}/cosmos/tx/v1beta1/txs?events=tx.height={}", COSMOS_API_ENDPOINT, height)
+        };
 
-    let res = reqwest::blocking::get(&url).map_err(|_| FetchError::NetworkError)?;
-    let res_text = res.text().map_err(|_| FetchError::ParseError)?;
+        println!("{}", url);
 
-    let data: Result<ResponseData, _> = serde_json::from_str(&res_text);
-    data.map_err(|_| FetchError::ParseError)
+        let res = reqwest::blocking::get(&url).map_err(|_| FetchError::NetworkError)?;
+        let res_text = res.text().map_err(|_| FetchError::ParseError)?;
+
+        let data: ResponseData = serde_json::from_str(&res_text).map_err(|_| FetchError::ParseError)?;
+        // Check if there's a next page
+        let next_key = data.pagination.next_key.clone();
+
+        // Now, push the data to all_data
+        all_data.push(data);
+
+        // Check if there's a next page
+        if next_key.is_none(){
+            break;
+        }
+    }
+
+    Ok(all_data)
 }
-

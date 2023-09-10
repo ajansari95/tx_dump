@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use crate::models::pagination::Pagination;
 use super::message::Message;
+
 
 
 
@@ -8,6 +10,7 @@ use super::message::Message;
 pub struct ResponseData {
     txs: Vec<Tx>,
     tx_responses: Vec<TxResponse>,
+    pub(crate) pagination: Pagination,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
