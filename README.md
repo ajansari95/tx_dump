@@ -41,3 +41,62 @@ The key to navigating through these challenges was a combination of:
 - **Expression-Based Language**: One of the standout features of Rust is that almost everything is an expression, which can sometimes be both surprising and powerful.
 
 - **Memory Management**: Rust's unique approach to memory management, especially how it differentiates between heap and stack using ownership principles, was a refreshing and enlightening experience. It underscores the language's focus on safety and performance.
+
+
+# Project Progress Update: Day 2
+
+## Overview
+
+On day 2, the main focus was to extend the functionality related to the transaction fetching and parsing system. The objectives achieved include:
+
+1. **Fetching Data from Different Endpoints**: Successfully implemented and tested the functions to fetch transactions based on block height, a range of block heights, and specific transaction hashes. These functions served as the backbone for our data retrieval process.
+
+2. **Data Transformation**: Transformed the raw transaction data from the Cosmos API into a more comprehensive and usable format. This involved parsing different fields, handling errors, and structuring the data into the `ComprehensiveTx` type.
+
+3. **Unit Testing**: Built robust unit tests for various functions and trait implementations. These tests ensured the accuracy and reliability of our codebase. Every function, especially those involving data transformation, were thoroughly vetted for different edge cases.
+
+4. **Error Handling**: Introduced custom error types using Rust's powerful enum feature. This allowed for clearer, more descriptive error messages and made error handling more intuitive.
+
+5. **Generics and Traits in Data Operations**: Incorporated the use of generics and traits extensively in data operations. This design choice enhanced the flexibility of our data processing functions and fostered a deeper understanding of these Rust paradigms.
+
+## Challenges Encountered
+
+### 1. Data Discrepancies Between API Endpoints
+
+Different endpoints of the Cosmos API presented data in varying formats. The endpoint fetching transaction by height returned a list of transactions and their corresponding responses, while the one fetching by transaction hash returned individual transaction objects. This required designing the codebase to cater to both these structures, ensuring data consistency across the application.
+
+### 2. Type Matching and Error Handling in Rust
+
+Handling errors, especially when trying to parse data from external sources, proved challenging. Ensuring type safety, using Rust's Result type, and propagating errors where needed were some of the complexities dealt with.
+
+### 3. Implementing Custom Traits
+
+Implementing custom traits, such as `SortableField`, introduced challenges in terms of designing a flexible system that could cater to multiple types. Ensuring that these implementations were correctly interpreted by the Rust compiler took some iterations.
+
+### 4. Unit Testing with Mocks
+
+Creating mock data and structures for unit tests was an essential task, but it required attention to detail to ensure that the mock data closely matched real-world scenarios.
+
+## Questions and Insights
+
+- **How can we further optimize the fetching process?** While the current system works, as the number of transactions increases, there might be room for optimization.
+- **Concurrency can be helpful here?
+- **How to ensure the application remains scalable as more features are added?** As the project grows, ensuring modularity and scalability will be crucial.
+
+## Insights from Using Generics and Traits
+
+An integral part of this project involved extensive use of generics and traits in Rust. This approach was beneficial for several reasons:
+
+- **Code Reusability**: By designing functions and structures that were generic over types, we could reuse a significant portion of the code. This reduced redundancy and made the codebase more concise.
+
+- **Type Safety**: Leveraging Rust's strong type system, generics ensured that our functions and data structures were type-safe. This helped catch potential issues at compile-time rather than runtime.
+
+- **Improved Understanding**: Working with generics and traits helped solidify our understanding of these core Rust concepts. It provided practical experience on how to utilize them effectively in real-world scenarios.
+
+- **Data Operations**: The use of traits, especially, became central when performing various data operations. Implementing custom traits like `SortableField` allowed us to design a flexible system that could cater to multiple types and data structures seamlessly.
+
+## Next Steps
+
+1. Delve deeper into optimizing the fetch process.
+2. Explore the potential for introducing concurrency.
+3. Expand the scope of unit tests to cover more scenarios and functionalities.
