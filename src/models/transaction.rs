@@ -58,9 +58,18 @@ pub struct IndividualMsgTx {
 
 impl ComprehensiveTx {
     /// Converts the comprehensive transaction into individual message transactions.
-    fn to_individual_msg_txs(&self, message: &Message) -> IndividualMsgTx {
+    pub fn to_individual_transactions(&self) -> Result<Vec<IndividualMsgTx>, TranslationError> {
+        let results: Vec<IndividualMsgTx> = self.messages.iter()
+            .map(|msg| self.to_individual_msg_txs(msg))
+            .collect();
+
+        Ok(results)
+    }
+
+    // assuming you already have this function
+    fn to_individual_msg_txs(&self, msg: &Message) -> IndividualMsgTx {
         IndividualMsgTx {
-            message: message.clone(),
+            message: msg.clone(),
             height: self.height,
             tx_hash: self.tx_hash.clone(),
             timestamp: self.timestamp,
@@ -70,7 +79,6 @@ impl ComprehensiveTx {
             timeout_height: self.timeout_height.clone(),
         }
     }
-
     /// Sorts a list of transactions based on a given sortable field.
     pub fn sort_by<T: SortableField<Self>>(transactions: &mut Vec<Self>, ascending: bool) {
         transactions.sort_by(|a, b| {
@@ -173,6 +181,8 @@ pub struct ResponseDataForHashQuery {
 }
 
 
+
+
 // The main structure for a transaction.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tx {
@@ -251,6 +261,7 @@ fn build_comprehensive_tx(tx: &Tx, tx_response: &TxResponse) -> Result<Comprehen
 // Error Handling
 
 // Enum to represent different kinds of errors that can occur during translation.
+#[derive(Debug)]
 pub enum TranslationError {
     GasUsedParseError(std::num::ParseIntError),
     TimestampParseError(chrono::format::ParseError),
@@ -370,6 +381,13 @@ mod tests {
                     denom: "ustake".to_string(),
                     amount: "1000".to_string(),
                 }],
+            },Message::MsgSend {
+                from_address: "cosmos12".to_string(),
+                to_address: "cosmos13".to_string(),
+                amount: vec![Amount {
+                    denom: "ustake".to_string(),
+                    amount: "1000".to_string(),
+                }],
             }],
             height: 0,
             tx_hash: "".to_string(),
@@ -417,18 +435,21 @@ mod tests {
         let comp_tx = mock_comprehensive_tx();
         let message = mock_message();
 
-        let individual_msg_tx = comp_tx.to_individual_msg_txs(&message);
+        let individual_msg_txs_result = comp_tx.to_individual_transactions();
 
-        // Check if the fields in the returned object match the source data
-        assert_eq!(individual_msg_tx.message, message);
-        assert_eq!(individual_msg_tx.height, comp_tx.height);
-        assert_eq!(individual_msg_tx.tx_hash, comp_tx.tx_hash);
-        assert_eq!(individual_msg_tx.timestamp, comp_tx.timestamp);
-        assert_eq!(individual_msg_tx.data, comp_tx.data);
-        assert_eq!(individual_msg_tx.signatures, comp_tx.signatures);
-        assert_eq!(individual_msg_tx.memo, comp_tx.memo);
-        assert_eq!(individual_msg_tx.timeout_height, comp_tx.timeout_height);
+        let individual_msg_tx1 = individual_msg_txs_result.expect("Failed to convert to individual transactions")[0].clone();
+
+// Check if the fields in the returned object match the source data
+        assert_eq!(individual_msg_tx1.message, message);
+        assert_eq!(individual_msg_tx1.height, comp_tx.height);
+        assert_eq!(individual_msg_tx1.tx_hash, comp_tx.tx_hash);
+        assert_eq!(individual_msg_tx1.timestamp, comp_tx.timestamp);
+        assert_eq!(individual_msg_tx1.data, comp_tx.data);
+        assert_eq!(individual_msg_tx1.signatures, comp_tx.signatures);
+        assert_eq!(individual_msg_tx1.memo, comp_tx.memo);
+        assert_eq!(individual_msg_tx1.timeout_height, comp_tx.timeout_height);
     }
+
 
 }
 

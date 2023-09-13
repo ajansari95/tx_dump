@@ -1,9 +1,8 @@
 use std::fmt;
 use std::thread::sleep;
-use reqwest::blocking::Response;
-use crate::config::config::Config;
 
-use crate::models::transaction::{ResponseData, ResponseDataForHashQuery};
+use crate::config::config::Config;
+use crate::models::transaction::{ComprehensiveTx, ResponseData, ResponseDataForHashQuery, Translate,IndividualMsgTx};
 
 pub const COSMOS_API_ENDPOINT: &str = "https://lcd.cosmoshub-4.quicksilver.zone:443";
 
@@ -13,6 +12,7 @@ pub const COSMOS_API_ENDPOINT: &str = "https://lcd.cosmoshub-4.quicksilver.zone:
 pub enum FetchError {
     NetworkError,
     ParseError,
+    TranslateError,
 }
 
 // Implementing the Display trait for FetchError
@@ -21,6 +21,7 @@ impl fmt::Display for FetchError {
         match self {
             FetchError::NetworkError => write!(f, "Network error occurred during fetch"),
             FetchError::ParseError => write!(f, "Failed to parse the fetched data"),
+            FetchError::TranslateError => write!(f, "Failed to translate the fetched data"),
         }
     }
 }
@@ -85,7 +86,7 @@ impl fmt::Display for FetchError {
 ///
 /// This function doesn't perform unsafe operations. Ensure that the returned `Result`
 /// is managed properly in the calling context to address potential errors.
-pub fn fetch_transactions_for_height(config:&Config, height: u64) -> Result<Vec<ResponseData>, FetchError> {
+pub fn fetch_transactions_for_height(config: &Config, height: u64) -> Result<Vec<ResponseData>, FetchError> {
     let mut all_data = Vec::new();
     let next_key: Option<String> = None;
 
@@ -156,11 +157,11 @@ pub fn fetch_transactions_for_height(config:&Config, height: u64) -> Result<Vec<
 ///     }
 /// }
 /// ```
-pub fn fetch_transactions_for_height_range(config: &Config,start_height: u64, end_height: u64) -> Result<Vec<ResponseData>, FetchError> {
+pub fn fetch_transactions_for_height_range(config: &Config, start_height: u64, end_height: u64) -> Result<Vec<ResponseData>, FetchError> {
     let mut all_data = Vec::new();
 
     for height in start_height..=end_height {
-        let data_for_height = fetch_transactions_for_height(config,height)?;
+        let data_for_height = fetch_transactions_for_height(config, height)?;
         all_data.extend(data_for_height);
         sleep(std::time::Duration::from_millis(100));
     }
@@ -228,7 +229,7 @@ pub fn fetch_transactions_for_height_range(config: &Config,start_height: u64, en
 ///
 /// This function doesn't perform unsafe operations. Ensure you handle the returned
 /// `Result` appropriately in the calling context to manage any potential errors.
-pub fn fetch_by_tx_hash(config: &Config,tx_hash: &str) -> Result<ResponseDataForHashQuery, FetchError> {
+pub fn fetch_by_tx_hash(config: &Config, tx_hash: &str) -> Result<ResponseDataForHashQuery, FetchError> {
     let url = format!("{}/cosmos/tx/v1beta1/txs/{}", config.url(), tx_hash);
 
     // Try making the HTTP request
@@ -256,6 +257,52 @@ pub fn fetch_by_tx_hash(config: &Config,tx_hash: &str) -> Result<ResponseDataFor
 
     Ok(data)
 }
+
+/// get_raw_tx_data_for_hash
+pub fn get_comprehensive_tx_data_for_hash(config: &Config, tx_hash: &str) -> Result<Vec<ComprehensiveTx>, FetchError> {
+    // translate to comprehensive and handle the error
+    let data = fetch_by_tx_hash(config, tx_hash)?;
+    data.translate().map_err(|e| {
+        FetchError::TranslateError
+    })
+}
+
+pub fn get_comprehensive_tx_data_for_height(config: &Config, height: u64) -> Result<Vec<ComprehensiveTx>, FetchError> {
+    let data = fetch_transactions_for_height(config, height)?;
+    let mut comprehensive_txs = Vec::new();
+    for response_data in data {
+        let mut txs = response_data.translate().map_err(|e| {
+            FetchError::TranslateError
+        })?;
+        comprehensive_txs.append(&mut txs);
+    }
+    Ok(comprehensive_txs)
+}
+
+pub fn get_comprehensive_tx_data_for_height_range(config: &Config, start_height: u64, end_height: u64) -> Result<Vec<ComprehensiveTx>, FetchError> {
+    let mut comprehensive_txs = Vec::new();
+    for height in start_height..=end_height {
+        let data = fetch_transactions_for_height(config, height)?;
+        for response_data in data {
+            let mut txs = response_data.translate().map_err(|e| {
+                FetchError::TranslateError
+            })?;
+            comprehensive_txs.append(&mut txs);
+        }
+    }
+    Ok(comprehensive_txs)
+}
+
+pub fn get_individual_txs_from_comprehensive_txs(comprehensive_txs: &Vec<ComprehensiveTx>) -> Result<Vec<IndividualMsgTx>, FetchError> {
+    let mut individual_msg_txs = Vec::new();
+    individual_msg_txs = comprehensive_txs.translate().map_err(|e| {
+        FetchError::TranslateError
+    })?;
+    Ok(individual_msg_txs)
+}
+
+
+
 
 
 
