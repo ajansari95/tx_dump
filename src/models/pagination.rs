@@ -1,9 +1,19 @@
+use std::fmt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize,Deserialize)]
 pub struct Pagination {
     pub next_key: Option<String>,
     pub total: String,
+}
+
+impl fmt::Display for Pagination {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.next_key {
+            Some(next_key) => write!(f, "Next Key: {}, Total: {}", next_key, self.total),
+            None => write!(f, "Next Key: None, Total: {}", self.total)
+        }
+    }
 }
 
 // impl<'de> Deserialize<'de> for Pagination {

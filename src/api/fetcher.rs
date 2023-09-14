@@ -1,5 +1,8 @@
 use std::fmt;
+use std::sync::Arc;
 use std::thread::sleep;
+use tokio::sync::Semaphore;
+use tokio::task;
 
 use crate::config::config::Config;
 use crate::models::transaction::{ComprehensiveTx, ResponseData, ResponseDataForHashQuery, Translate,IndividualMsgTx};
@@ -13,7 +16,16 @@ pub enum FetchError {
     NetworkError,
     ParseError,
     TranslateError,
+    TaskFailure(String)
 }
+
+impl FetchError {
+    fn new(msg: &str) -> Self {
+        FetchError::TaskFailure(msg.to_string())
+    }
+}
+
+
 
 // Implementing the Display trait for FetchError
 impl fmt::Display for FetchError {
@@ -22,6 +34,7 @@ impl fmt::Display for FetchError {
             FetchError::NetworkError => write!(f, "Network error occurred during fetch"),
             FetchError::ParseError => write!(f, "Failed to parse the fetched data"),
             FetchError::TranslateError => write!(f, "Failed to translate the fetched data"),
+            FetchError::TaskFailure(msg) => write!(f, "Task failure: {}", msg),
         }
     }
 }
@@ -157,18 +170,32 @@ pub fn fetch_transactions_for_height(config: &Config, height: u64) -> Result<Vec
 ///     }
 /// }
 /// ```
-pub fn fetch_transactions_for_height_range(config: &Config, start_height: u64, end_height: u64) -> Result<Vec<ResponseData>, FetchError> {
+pub async fn fetch_transactions_for_height_range(config: Arc<Config>, start_height: u64, end_height: u64) -> Result<Vec<ResponseData>, FetchError> {
     let mut all_data = Vec::new();
 
-    for height in start_height..=end_height {
-        let data_for_height = fetch_transactions_for_height(config, height)?;
-        all_data.extend(data_for_height);
-        sleep(std::time::Duration::from_millis(100));
+    // Create a semaphore with 10 permits
+    let semaphore = Arc::new(Semaphore::new(10));
+
+    let handles: Vec<_> = (start_height..=end_height).map(|height| {
+        let config = config.clone(); // This clones the Arc, not the Config itself
+        let sem_clone = semaphore.clone();
+        task::spawn_blocking(move || {
+            // Acquire a permit
+            let _permit = sem_clone.acquire();
+            // Once we have a permit, fetch the data
+            fetch_transactions_for_height(&config, height)
+        })
+    }).collect();
+
+    for handle in handles {
+        match handle.await {
+            Ok(data) => all_data.extend(data?),
+            Err(_) => return Err(FetchError::TaskFailure(String::from("Task failed"))),
+        };
     }
 
     Ok(all_data)
 }
-
 /// Fetches transaction data from the Cosmos SDK REST endpoint based on a given transaction hash.
 ///
 /// This function interfaces with the Cosmos SDK REST API to retrieve transaction details

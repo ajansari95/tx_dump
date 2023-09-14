@@ -1,0 +1,29 @@
+use std::error::Error;
+use std::fmt::Display;
+use csv::Writer;
+use prettytable::{Cell, Row, Table};
+use serde::Serialize;
+
+pub fn dump_to_csv<T: Serialize>(data: &Vec<T>, filename: String) -> Result<(), Box<dyn Error>> {
+    let mut writer = Writer::from_path(filename)?;
+
+    for item in data {
+        writer.serialize(item)?;
+    }
+
+    writer.flush()?;
+
+    Ok(())
+}
+
+pub fn display_pretty<T: Display>(data: &Vec<T>) {
+    let mut table = Table::new();
+    // Add a row per item
+    for item in data.iter() {
+        table.add_row(Row::new(vec![
+            Cell::new(&item.to_string()),
+        ]));
+    }
+    // Print the table to stdout
+    table.printstd();
+}

@@ -40,6 +40,25 @@ pub struct ComprehensiveTx {
     timeout_height: String,
 }
 
+impl fmt::Display for ComprehensiveTx {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Messages: {:?}\nHeight: {}\nTx Hash: {}\nGas Used: {}\nGas Wanted: {}\nTimestamp: {}\nData: {}\nSignatures: {:?}\nMemo: {}\nTimeout Height: {}",
+            self.messages,
+            self.height,
+            self.tx_hash,
+            self.gas_used,
+            self.gas_wanted,
+            self.timestamp,
+            self.data,
+            self.signatures,
+            self.memo,
+            self.timeout_height
+        )
+    }
+}
+
 /// Represents a specific message within a transaction.
 /// Includes a subset of the attributes present in `ComprehensiveTx`.
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -52,6 +71,17 @@ pub struct IndividualMsgTx {
     signatures: Vec<String>,
     memo: String,
     timeout_height: String,
+}
+
+impl fmt::Display for IndividualMsgTx {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // This is a very basic representation; you can adjust as necessary.
+        write!(
+            f,
+            "Message: {:?}, Height: {}, Tx Hash: {}, Timestamp: {}",
+            self.message, self.height, self.tx_hash, self.timestamp
+        )
+    }
 }
 
 // ComprehensiveTx Methods
@@ -97,7 +127,7 @@ impl ComprehensiveTx {
 
 impl IndividualMsgTx {
     /// Filters the transactions based on the given message type.
-    pub fn filter_by_type(txs: &[Self], msg_type: MessageType) -> Vec<Self> {
+    pub fn filter_by_type(txs: &Vec<Self>, msg_type: MessageType) -> Vec<Self> {
         txs.iter().filter(|tx| {
             match (&tx.message, &msg_type) {
                 (Message::MsgSend { .. }, MessageType::MsgSend) => true,
@@ -107,6 +137,18 @@ impl IndividualMsgTx {
                 _ => false,
             }
         }).cloned().collect()
+    }
+
+    pub fn sort_by<T: SortableField<Self>>(transactions: &mut Vec<Self>, ascending: bool) {
+        transactions.sort_by(|a, b| {
+            let a_val = T::get_field_value(a);
+            let b_val = T::get_field_value(b);
+            if ascending {
+                a_val.cmp(b_val)
+            } else {
+                b_val.cmp(a_val)
+            }
+        });
     }
 }
 
@@ -167,6 +209,14 @@ impl SortableField<ComprehensiveTx> for u64 {
 // Implementation of the `SortableField` trait for the `DateTime<Utc>` type.
 impl SortableField<ComprehensiveTx> for DateTime<Utc> {
     fn get_field_value(tx: &ComprehensiveTx) -> &Self {
+        &tx.timestamp
+    }
+}
+
+
+// Implementation of the `SortableField` trait for the `DateTime<Utc>` type.
+impl SortableField<IndividualMsgTx> for DateTime<Utc> {
+    fn get_field_value(tx: &IndividualMsgTx) -> &Self {
         &tx.timestamp
     }
 }
@@ -235,6 +285,15 @@ pub struct ResponseData {
     tx_responses: Vec<TxResponse>,
     // Corresponding list of responses for the transactions.
     pub(crate) pagination: Pagination,  // Pagination details if the data is part of a paged response.
+}
+
+impl fmt::Display for ResponseData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Transactions: {:?}\nResponses: {:?}\nPagination: {}",
+               self.txs,
+               self.tx_responses,
+               self.pagination)
+    }
 }
 
 // Helper function to build a comprehensive view of a transaction based on its details and response.

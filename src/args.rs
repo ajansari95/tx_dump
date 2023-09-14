@@ -1,30 +1,11 @@
 // Import necessary libraries and modules
 use std::str::FromStr;
 use clap::{Args, Parser, Subcommand};
+use crate::models;
+use crate::models::message::MessageType;
 
 // Enum to represent the different message types supported
-#[derive(Parser, Debug, PartialEq, Clone)]
-pub enum MsgType {
-    MsgSend,
-    MsgDelegate,
-    MsgTransfer,
-    Other,
-}
 
-// Implementation to convert string slices to MsgType
-impl FromStr for MsgType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "MsgSend" => Ok(MsgType::MsgSend),
-            "MsgDelegate" => Ok(MsgType::MsgDelegate),
-            "MsgTransfer" => Ok(MsgType::MsgTransfer),
-            "Other" => Ok(MsgType::Other),
-            _ => Err(format!("'{}' is not a valid MsgType value", s)),
-        }
-    }
-}
 
 // Enum to define the order of sorting (Ascending or Descending)
 #[derive(Parser, Debug, PartialEq, Clone)]
@@ -56,6 +37,7 @@ pub struct Opts {
     /// Determines which subcommand to execute
     #[clap(subcommand)]
     pub cmd: TxDumpCommand,
+
 }
 
 // Enum representing the main subcommands available
@@ -109,7 +91,7 @@ pub struct IndividualMsgOpts {
     pub sort_by_gas_used: Option<String>,
     /// Filter transactions based on message type
     #[clap(long)]
-    pub filter_by_msgtype: Option<MsgType>,
+    pub filter_by_msgtype: Option<models::message::MessageType>,
     /// Height of the transaction
     pub height: u64,
 }
@@ -168,7 +150,7 @@ pub struct IndividualMsgRangeOpts {
     pub sort_by_gas_used: Option<String>,
     /// Filter transactions based on message type
     #[clap(long)]
-    pub filter_by_msgtype: Option<MsgType>,
+    pub filter_by_msgtype: Option<MessageType>,
     /// Starting height of the transaction range
     pub from_height: u64,
     /// Ending height of the transaction range

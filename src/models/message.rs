@@ -1,3 +1,5 @@
+use std::str::FromStr;
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug,PartialEq ,Serialize, Deserialize, Clone)]
@@ -45,12 +47,27 @@ pub enum Message {
 }
 
 /// Represents various message types from the CosmosSDK.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone,Parser,PartialEq)]
 pub enum MessageType {
     MsgSend,
     MsgDelegate,
     MsgTransfer,
     Other,
+}
+
+// Implementation to convert string slices to MsgType
+impl FromStr for MessageType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "MsgSend" => Ok(MessageType::MsgSend),
+            "MsgDelegate" => Ok(MessageType::MsgDelegate),
+            "MsgTransfer" => Ok(MessageType::MsgTransfer),
+            "Other" => Ok(MessageType::Other),
+            _ => Err(format!("'{}' is not a valid MsgType value", s)),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq,Serialize, Deserialize, Clone)]

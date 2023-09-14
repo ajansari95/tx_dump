@@ -14,42 +14,79 @@ mod config;
 mod args;
 
 
+
 use std::env;
 use std::env::home_dir;
 use std::error::Error;
 use std::path::PathBuf;
+use std::sync::Arc;
 use crate::config::config::Config;
 use clap::{Command, Parser ,Arg,ArgMatches};
 use args::Opts;
-fn main() {
-    println!("{:?}", std::env::args().collect::<Vec<String>>());
+use crate::args::TxDumpCommand;
+
+// #[tokio::main]
+// async fn main() {
+//     // Fetch transactions for height
+//     let new_config = Config {
+//         url: "https://lcd.cosmoshub-4.quicksilver.zone:443".to_string(),
+//     };
+//     let config = Arc::new(new_config);
+//
+//     match fetcher::fetch_transactions_for_height_range(config, 16990463, 16990468).await {
+//         Ok(response_data_vec) => {
+//             println!("Received transactions: {:?}", response_data_vec);
+//         }
+//         Err(FetchError::NetworkError) => {
+//             eprintln!("Network error occurred while fetching transactions.");
+//         }
+//         Err(FetchError::ParseError) => {
+//             eprintln!("Error parsing response from server.");
+//         }
+//         // Add other error handlers if there are more error variants
+//         Err(e) => {
+//             eprintln!("An error occurred: {:?}", e);
+//         }
+//     }
+// }
+
+
+#[tokio::main]
+async fn main() {
+
+
+
     let opts = Opts::parse();
-    let config_path = match opts.config {
-        Some(path) => path,
-        None => {
-            eprintln!("Error: The --config argument is required for every command.");
-            std::process::exit(1);
+
+    // Declare an optional Config variable
+    let mut g_config: Option<Config> = None;
+
+    // If the --config flag is set, attempt to read the configuration from the specified file.
+    if let Some(cfg) = opts.config {
+        let config = match Config::from_file(&cfg) {
+            Ok(cfg) => Some(cfg),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                None
+            }
+        };
+        // Reading configuration from file ok!
+        if let Some(cfg) = &config{
+            println!("Loaded Config: {:?}", cfg);
+            g_config = config;
         }
-    };
-    // Parse command-line arguments using clap.
-    // let opts = Opts::parse();
-    //
-    // // Declare an optional Config variable
-    // let mut config: Option<Config> = None;
-    //
-    // // If the --config flag is set, attempt to read the configuration from the specified file.
-    //
-    //
-    // if let Some(cfg) = &config {
-    //     println!("Loaded Config: {:?}", cfg);
-    // }
+
+        println!("Loaded Config: {:?}", g_config);
+
+    }
+    println!("Loaded Config: {:?}", g_config);
 
 
-    // match opts.cmd {
-    //     TxDumpCommand::QueryTxAtHeight(ref opts) => query_tx_at_height(opts),
-    //     TxDumpCommand::QueryTxHash(ref opts) => query_tx_by_hash(opts),
-    //     TxDumpCommand::QueryTxForRangeHeight(ref opts) => query_tx_for_range_height(opts),
-    // }
+    match opts.cmd {
+        TxDumpCommand::QueryTxAtHeight(query_height_opts) => api::handlers::handle_query_tx_at_height(&g_config.unwrap(),query_height_opts),
+        TxDumpCommand::QueryTxHash(query_hash_opts) => api::handlers::handle_query_tx_hash(&g_config.unwrap(),query_hash_opts),
+        TxDumpCommand::QueryTxForRangeHeight(query_range_height_opts) => api::handlers::handle_query_tx_for_range_height(g_config.unwrap(),query_range_height_opts),
+    }
 }
 
 
