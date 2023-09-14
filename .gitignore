@@ -1,2 +1,5 @@
 /target
 .idea
+*.csv
+scratch.rs
+mock.json

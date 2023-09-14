@@ -2,11 +2,6 @@ use std::str::FromStr;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug,PartialEq ,Serialize, Deserialize, Clone)]
-pub struct Amount {
-    pub denom: String,
-    pub amount: String,
-}
 
 /// Represents various message types from the CosmosSDK.
 /// The `Message` enum is used to deserialize different message types based on the `@type` field
@@ -46,6 +41,15 @@ pub enum Message {
 
 }
 
+/// Represents the `amount` field in the `MsgSend` and `MsgDelegate` message types.
+#[derive(Debug,PartialEq ,Serialize, Deserialize, Clone)]
+pub struct Amount {
+    pub denom: String,
+    pub amount: String,
+}
+
+
+
 /// Represents various message types from the CosmosSDK.
 #[derive(Debug, Serialize, Deserialize, Clone,Parser,PartialEq)]
 pub enum MessageType {
@@ -55,7 +59,7 @@ pub enum MessageType {
     Other,
 }
 
-// Implementation to convert string slices to MsgType
+/// Implementation to convert string slices to MsgType
 impl FromStr for MessageType {
     type Err = String;
 
@@ -70,6 +74,7 @@ impl FromStr for MessageType {
     }
 }
 
+/// Represents the `timeout_height` field in the `MsgTransfer` message type.
 #[derive(Debug, PartialEq,Serialize, Deserialize, Clone)]
 pub struct TimeoutHeight {
     revision_number: String,

@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{BufReader, Read};
+use std::io::{Read};
 use serde::{Deserialize, Serialize};
 
 
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     pub(crate) url: String,
 }
-
+/// Implementation of Config
 impl Config{
     pub fn url(&self) -> &String{
         &self.url

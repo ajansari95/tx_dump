@@ -100,3 +100,100 @@ An integral part of this project involved extensive use of generics and traits i
 1. Delve deeper into optimizing the fetch process.
 2. Explore the potential for introducing concurrency.
 3. Expand the scope of unit tests to cover more scenarios and functionalities.
+
+# Project Progress Update: Day 2
+
+## Overview
+
+On day 2, the focal point was delving deeper into the Rust language, particularly around concurrency, and continuing to enhance the transaction fetching system. Here’s a breakdown of the objectives achieved:
+
+1. **Concurrency in Rust**: Gained an intricate understanding of concurrency in Rust. Explored Rust’s borrowing mechanism, a unique feature that allows for efficient and safe concurrent operations.
+
+2. **Expanding on Transaction Data**: Implemented functionality to extend the in-built functions, leading to richer data extraction and transformation. This revolved around the `ComprehensiveTx` structure and the transformation of raw data from the Cosmos API.
+
+3**Libraries Exploration**: Familiarized with the Clap library for command line argument parsing and the Strum library, both of which would be pivotal for the project moving forward, especially in the CLI app development phase.
+
+4**Memory Management in Concurrency**: Ventured into understanding how Rust manages memory during concurrent operations. Grasped the intricate nuances of Rust's memory safety features in a multi-threaded context.
+
+## Challenges Encountered
+
+### 1. Memory Management in Concurrency
+
+Understanding the intricacies of how Rust handles memory in a concurrent setting posed challenges. This was especially pertinent in situations where multiple threads accessed shared resources.
+
+### 2. Extending Built-In Functions
+
+Working on extending the built-in functions and leveraging various standard libraries required a meticulous approach to ensure that the extended functionalities played well with existing ones.
+
+### 3. Decision on Libraries Utilization
+
+Choosing between the builder pattern and derive method in the Clap library was a significant decision. Both had their merits, and finalizing one required an understanding of the project's long-term requirements.
+
+### 4. Macro Design for Data Population
+
+Designing a macro to automate the population of a message type brought its own set of complexities, especially when trying to generalize its functionality.
+
+## Questions and Insights
+
+- **Is there a better way to handle memory during concurrent operations?** While Rust provides robust tools, there's always room to refine and optimize further.
+
+- **Could more libraries or tools enhance the functionality or efficiency of our application?** As the project progresses, staying updated with the latest tools and libraries could provide added advantages.
+
+- **How to make full use of Rust’s type system for further error handling?** Rust’s type system and enum feature offer a vast playground for designing custom error handling patterns.
+
+## Insights from Working with Concurrency
+
+Delving deep into Rust’s concurrency model provided several revelations:
+
+- **Efficiency & Safety**: Rust’s borrowing mechanism is a standout feature, ensuring efficient and safe concurrency.
+
+- **Learning Curve**: While powerful, there's undeniably a learning curve involved in mastering concurrent programming in Rust. However, the safety and performance benefits are worth the effort.
+
+- **Real-world Implications**: A deeper understanding of concurrency not only benefits this project but has broader real-world applications, especially in systems that require high performance and safety.
+
+## Next Steps
+
+1. Continue refining the transaction data transformation process.
+2. Investigate further libraries or tools that could complement or enhance the current toolset.
+3. Begin preparations for day 3, ensuring a structured approach to tackle the next set of challenges and objectives.
+
+# Project Progress Update: Day 4
+
+## Overview
+
+The primary focus of Day 4 was to refine data processing capabilities and improve user interaction with the application. The major tasks for the day revolved around implementing data export functionality and developing a user-friendly command-line interface (CLI). Here’s a summary of the day's achievements and challenges:
+
+### Objectives Achieved:
+
+1. **Exporting Data to CSV**: Began implementing a feature to export the analyzed blockchain data into a CSV format. This would provide users with an easily digestible and shareable format for any processed transaction data.
+2. **Command Line Interface (CLI) Creation**: Successfully designed a CLI for enhanced user interaction using the Clap library’s derive pattern. The interface provides users with options to query blockchain data using different filters, enhancing the application's usability.
+3. **Asynchronous Processing**: Introduced asynchronous processing to fetch data for a range of block heights. This significantly optimized the data retrieval process, reducing wait times and improving application responsiveness.
+
+## Challenges Encountered:
+
+### 1. Handling Composite Types with CSV:
+The most significant challenge of the day was working with the csv::Writer in Rust when dealing with composite data types. Unlike simpler data types, composite types require additional handling to be written to CSV, and the current implementation faced difficulties in this area. There’s an ongoing effort to find a method to flatten the data structures and allow for seamless CSV writing while retaining important information.
+
+### 2. CLI Design Choices:
+While the Clap library is powerful and offers multiple patterns for designing CLIs, settling on the derive pattern required understanding the specific needs of the project and the long-term maintainability of the chosen approach.
+
+### 3. Asynchronous Error Handling:
+Asynchronous programming, while efficient, introduced complexities related to error handling, especially when fetching data for a range of block heights. Ensuring robust error handling in such a scenario required careful design and testing.
+
+## Questions and Insights:
+
+- **How to effectively flatten composite types for CSV export?** The challenge with csv::Writer highlighted a broader question regarding the representation and flattening of complex data structures.
+- **Is there a need for more advanced filtering options in the CLI?** As the CLI develops, understanding the potential requirements for advanced data querying will be essential.
+- **Could concurrency be introduced in other areas of the application for performance gains?** The success of implementing asynchronous processing for block height ranges raises this pertinent question.
+
+## Insights from Questions and Past Discussions:
+
+- **Memory Management in Concurrency**: From previous interactions, a deeper understanding was gained on how Rust ensures memory safety during concurrent operations. This played a crucial role when implementing the asynchronous processing feature.
+- **Data Structuring for CSV**: Based on our discussions, it became evident that working with external libraries like csv::Writer often requires adapting or transforming internal data structures. The goal is to strike a balance between maintaining data integrity and ensuring compatibility with external tools.
+- **Enhancing Functionality with Libraries**: Past interactions also underscored the importance of leveraging external libraries, like Clap, to enhance application functionality without reinventing the wheel.
+
+## Next Steps:
+
+1. Resolve the challenges associated with exporting composite types to CSV.
+2. Expand the CLI's functionality to possibly include more advanced filters or query options.
+3. Continue refining the asynchronous data retrieval process and explore other areas where concurrency can be introduced.

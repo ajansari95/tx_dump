@@ -1,13 +1,13 @@
 use std::fmt;
+use std::fmt::{Display};
 use std::sync::Arc;
-use std::thread::sleep;
+
 use tokio::sync::Semaphore;
 use tokio::task;
 
 use crate::config::config::Config;
 use crate::models::transaction::{ComprehensiveTx, ResponseData, ResponseDataForHashQuery, Translate,IndividualMsgTx};
 
-pub const COSMOS_API_ENDPOINT: &str = "https://lcd.cosmoshub-4.quicksilver.zone:443";
 
 
 // Enum for custom error types
@@ -20,11 +20,12 @@ pub enum FetchError {
 }
 
 impl FetchError {
+    #![allow(dead_code)]
     fn new(msg: &str) -> Self {
         FetchError::TaskFailure(msg.to_string())
     }
 }
-
+impl std::error::Error for FetchError {}
 
 
 // Implementing the Display trait for FetchError
@@ -285,20 +286,52 @@ pub fn fetch_by_tx_hash(config: &Config, tx_hash: &str) -> Result<ResponseDataFo
     Ok(data)
 }
 
-/// get_raw_tx_data_for_hash
+/// Fetches and translates a transaction's data into its comprehensive format using its hash.
+///
+/// Given a `Config` instance and a transaction hash, this function first fetches the transaction data
+/// using `fetch_by_tx_hash` method. Post fetching, it translates the raw data into a `ComprehensiveTx` format.
+///
+/// # Parameters
+///
+/// * `config`: A reference to the configuration used to access necessary endpoints or services.
+/// * `tx_hash`: A string slice that represents the transaction hash.
+///
+/// # Returns
+///
+/// * `Ok(Vec<ComprehensiveTx>)`: A successful result containing a vector of `ComprehensiveTx` objects.
+/// * `Err(FetchError)`: An error result indicating a problem encountered during the fetch or translation process.
+///                      The error might be due to network issues, parsing problems, or translation failures.
+///
+/// # Errors
+///
+/// This function can return `FetchError::TranslateError` if there's a problem translating the raw data into `ComprehensiveTx` format.
+///
+/// # Example
+///
+/// ```rust
+/// # use your_crate_name::Config;
+/// let config = Config::new();
+/// let tx_hash = "some_hash_string";
+/// let result = get_comprehensive_tx_data_for_hash(&config, tx_hash);
+/// match result {
+///     Ok(data) => println!("Transaction data: {:?}", data),
+///     Err(e) => eprintln!("Failed to fetch transaction data: {}", e),
+/// }
+/// #![allow(dead_code)]
 pub fn get_comprehensive_tx_data_for_hash(config: &Config, tx_hash: &str) -> Result<Vec<ComprehensiveTx>, FetchError> {
     // translate to comprehensive and handle the error
     let data = fetch_by_tx_hash(config, tx_hash)?;
-    data.translate().map_err(|e| {
+    data.translate().map_err(|_e| {
         FetchError::TranslateError
     })
 }
 
+/// Fetches and translates a transaction's data into its comprehensive format using its height.
 pub fn get_comprehensive_tx_data_for_height(config: &Config, height: u64) -> Result<Vec<ComprehensiveTx>, FetchError> {
     let data = fetch_transactions_for_height(config, height)?;
     let mut comprehensive_txs = Vec::new();
     for response_data in data {
-        let mut txs = response_data.translate().map_err(|e| {
+        let mut txs = response_data.translate().map_err(|_e| {
             FetchError::TranslateError
         })?;
         comprehensive_txs.append(&mut txs);
@@ -311,7 +344,7 @@ pub fn get_comprehensive_tx_data_for_height_range(config: &Config, start_height:
     for height in start_height..=end_height {
         let data = fetch_transactions_for_height(config, height)?;
         for response_data in data {
-            let mut txs = response_data.translate().map_err(|e| {
+            let mut txs = response_data.translate().map_err(|_e| {
                 FetchError::TranslateError
             })?;
             comprehensive_txs.append(&mut txs);
@@ -322,7 +355,7 @@ pub fn get_comprehensive_tx_data_for_height_range(config: &Config, start_height:
 
 pub fn get_individual_txs_from_comprehensive_txs(comprehensive_txs: &Vec<ComprehensiveTx>) -> Result<Vec<IndividualMsgTx>, FetchError> {
     let mut individual_msg_txs = Vec::new();
-    individual_msg_txs = comprehensive_txs.translate().map_err(|e| {
+    individual_msg_txs = comprehensive_txs.translate().map_err(|_e| {
         FetchError::TranslateError
     })?;
     Ok(individual_msg_txs)

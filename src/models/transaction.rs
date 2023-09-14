@@ -59,30 +59,6 @@ impl fmt::Display for ComprehensiveTx {
     }
 }
 
-/// Represents a specific message within a transaction.
-/// Includes a subset of the attributes present in `ComprehensiveTx`.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct IndividualMsgTx {
-    message: Message,
-    height: u64,
-    tx_hash: String,
-    timestamp: DateTime<Utc>,
-    data: String,
-    signatures: Vec<String>,
-    memo: String,
-    timeout_height: String,
-}
-
-impl fmt::Display for IndividualMsgTx {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // This is a very basic representation; you can adjust as necessary.
-        write!(
-            f,
-            "Message: {:?}, Height: {}, Tx Hash: {}, Timestamp: {}",
-            self.message, self.height, self.tx_hash, self.timestamp
-        )
-    }
-}
 
 // ComprehensiveTx Methods
 
@@ -123,6 +99,44 @@ impl ComprehensiveTx {
     }
 }
 
+
+/// Represents a specific message within a transaction.
+/// Includes a subset of the attributes present in `ComprehensiveTx`.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IndividualMsgTx {
+    #[serde(serialize_with = "serialize_message")]
+    message: Message,
+    height: u64,
+    tx_hash: String,
+    timestamp: DateTime<Utc>,
+    data: String,
+    #[serde(flatten)]
+    signatures: Vec<String>,
+    memo: String,
+    timeout_height: String,
+}
+
+// TRYING TO FLATTEN TO USE WITH CSV        todo:
+fn serialize_message<S>(msg: &Message, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+{
+    // Convert the Message enum to a JSON string
+    let s = serde_json::to_string(msg).unwrap();
+    serializer.serialize_str(&s)
+}
+
+impl fmt::Display for IndividualMsgTx {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // This is a very basic representation; you can adjust as necessary.
+        write!(
+            f,
+            "Message: {:?}, Height: {}, Tx Hash: {}, Timestamp: {}",
+            self.message, self.height, self.tx_hash, self.timestamp
+        )
+    }
+}
+
 // IndividualMsgTxs Methods
 
 impl IndividualMsgTx {
@@ -152,11 +166,13 @@ impl IndividualMsgTx {
     }
 }
 
-// Trait Implementations
 
-// Implementations for translating between different types of transactions.
 
-// Implementation of the `Translate` trait for the `ComprehensiveTx` structure.
+/// Trait Implementations
+
+/// Implementations for translating between different types of transactions.
+
+/// Implementation of the `Translate` trait for the `ComprehensiveTx` structure.
 impl Translate<IndividualMsgTx> for ComprehensiveTx {
     fn translate(&self) -> Result<Vec<IndividualMsgTx>, TranslationError> {
         let results: Vec<IndividualMsgTx> = self.messages.iter()
@@ -197,16 +213,16 @@ impl Translate<ComprehensiveTx> for ResponseData {
 }
 
 
-// Implementations to extract specific sortable fields from transactions.
+/// Implementations to extract specific sortable fields from transactions.
 
-// Implementation of the `SortableField` trait for the `u64` type.
+/// Implementation of the `SortableField` trait for the `u64` type.
 impl SortableField<ComprehensiveTx> for u64 {
     fn get_field_value(tx: &ComprehensiveTx) -> &Self {
         &tx.gas_used
     }
 }
 
-// Implementation of the `SortableField` trait for the `DateTime<Utc>` type.
+/// Implementation of the `SortableField` trait for the `DateTime<Utc>` type.
 impl SortableField<ComprehensiveTx> for DateTime<Utc> {
     fn get_field_value(tx: &ComprehensiveTx) -> &Self {
         &tx.timestamp
@@ -214,7 +230,7 @@ impl SortableField<ComprehensiveTx> for DateTime<Utc> {
 }
 
 
-// Implementation of the `SortableField` trait for the `DateTime<Utc>` type.
+/// Implementation of the `SortableField` trait for the `DateTime<Utc>` type.
 impl SortableField<IndividualMsgTx> for DateTime<Utc> {
     fn get_field_value(tx: &IndividualMsgTx) -> &Self {
         &tx.timestamp
@@ -472,7 +488,7 @@ mod tests {
     }
 
     use chrono::TimeZone;
-    use super::*;
+    
 
     #[test]
     fn test_gas_used_sortable_field() {
