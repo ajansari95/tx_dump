@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use clap::Parser;
 
 use cmd::args::Opts;
@@ -48,17 +46,17 @@ async fn main() {
 }
 
 
-fn get_default_config_path() -> PathBuf {
-    // let args: TxDumpArgs = TxDumpArgs::parse();
-    match dirs::home_dir() {
-        Some(mut path) => {
-            path.push(".tx_dump");
-            path.push("config.toml");
-            path
-        }
-        None => {
-            eprintln!("Warning: Unable to determine home directory. Using current directory for config path.");
-            PathBuf::from("./config.toml")
-        }
-    }
-}
+// fn get_default_config_path() -> PathBuf {
+//     // let args: TxDumpArgs = TxDumpArgs::parse();
+//     match dirs::home_dir() {
+//         Some(mut path) => {
+//             path.push(".tx_dump");
+//             path.push("config.toml");
+//             path
+//         }
+//         None => {
+//             eprintln!("Warning: Unable to determine home directory. Using current directory for config path.");
+//             PathBuf::from("./config.toml")
+//         }
+//     }
+// }
