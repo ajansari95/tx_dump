@@ -1,5 +1,5 @@
 
-> **_Note:_** The CSV export feature for composite types is currently experiencing issues and might not work as expected. still WIP.
+> **_Note:_** The CSV export feature for composite types is currently not fully working - some issues and might not work as expected. still WIP.
 
 ## Can track my learning progress [here](./LEARNINGS.md)
 
